@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset='utf-8'>
+		<title>Attractor</title>
+	</head>
+	<style>
+		* {
+			margin: 0;
+			padding: 0;
+			box-sizing: border-box;
+		}
+
+		body {
+			background-color: black;
+		}
+
+		.canvas {
+			display: block;
+			margin: 0 auto;
+		}
+
+		.controls {
+			background-color: #9E9E9E;
+			margin: 0 auto;
+		}
+
+		.controls-item {
+			width: auto;
+			color: white;
+			display: block;
+			margin: 0 auto;
+		}
+	</style>
+	<body>
+		<canvas class = 'canvas'>
+			Sorry, but your browser is not supported canvas
+		</canvas>
+		<div class = 'controls'>
+			<label class = 'controls-item'> a
+				<input type = 'number' step = '0.01' data-name = 'a' value = '-1'/>
+			</label>
+			<label class = 'controls-item'> b
+				<input type = 'number' step = '0.01' data-name = 'b' value = '-1'/>
+			</label>
+			<label class = 'controls-item'> c
+				<input type = 'number' step = '0.01' data-name = 'c' value = '-1.2'/>
+			</label>
+			<label class = 'controls-item'> d
+				<input type = 'number' step = '0.01' data-name = 'd' value = '1'/>
+			</label>
+			<label class = 'controls-item'> iteration
+				<input type = 'number' step = '100' data-name = 'iter-count' value = '50000'/>
+			</label>
+			<label class = 'controls-item'> t
+				<input type = 'number' step = '0.01' data-name = 't' value = '0.1'/>
+			</label>
+			<input type = 'button' class='controls-btn-reset' value = 'Reset'>
+		</div>
+		<script>
+			(function(){
+				var canvas = document.querySelector('.canvas'),
+					controlPanel = document.querySelector('.controls'),
+					controls = document.querySelectorAll('.controls input:not([data-name=""])'),
+					ctx = canvas.getContext('2d'),
+					params = [], signs = [],
+					maxValue = 3, minValue = -3,
+					interval = false;
+
+					function resizeElements() {
+						canvas.width = window.innerWidth * 0.98;
+						canvas.height = window.innerHeight;
+						controlPanel.style.width = canvas.width + 'px';
+						drawAttractor(params);
+					}
+
+					function getParams(controls){
+						var params = [],
+							i, len,
+							item;
+
+						for(i = 0, len = controls.length; i < len; i++) {
+							item = controls[i];
+							params[item.dataset.name] = item.value;
+							signs[item.dataset.name] = Math.random() > 0.5 ? 1 : -1;
+						}
+
+						return params;
+					}
+
+					function updateParamsHandler(e) {
+						var item = e.target;
+						params[item.dataset.name] = item.value;
+					}
+
+					function drawAttractor(params, x = 0.1, y = 0){
+						var a = +params['a'] || 1,
+							b = +params['b'] || 0.7,
+							c = +params['c'] || 0.6,
+							d = +params['d'] || 3.5,
+							t = +params['t'] || 0.01,
+							iterationCount = +params['iter-count'] || 1000,
+							xt, yt,
+							scale = 150,
+							pixels = [];
+
+							while(iterationCount-- > 0) {
+								xt = Math.sin(a * y) - Math.cos(b * x);
+								yt = Math.sin(c * x) - Math.cos(d * y);
+								pixels.push({x: xt * scale, y: yt * scale});
+								x = xt; y = yt;
+							}
+
+							render(pixels);
+						}
+
+					function render(pixels)
+					{
+						ctx.clearRect(0,0, canvas.width, canvas.height);
+						var imagedata = ctx.getImageData(0, 0, canvas.width, canvas.height),
+							i = pixels.length;
+												
+						while(i-- > 0)
+						{
+							var pixel = pixels[i],
+								 x = pixel.x + canvas.width / 2,
+								 y = pixel.y + canvas.height / 2,
+								 c;
+
+							if(x >= 0 && x <= canvas.width && y >= 0 && y <= canvas.height)
+							{
+								c = (Math.round(y) * imagedata.width + Math.round(x)) * 4;
+								imagedata.data[c] = 0;
+								imagedata.data[c + 1] = 255;
+								imagedata.data[c + 2] = 255;
+								imagedata.data[c + 3] = 255;
+							}
+						}
+
+						ctx.putImageData(imagedata, 0, 0);
+					}
+
+					function tick(){
+						var rand = Math.random(),
+							step = 0.02,
+							type = 'a';
+
+						if(rand < 0.5) {
+							type = 'a';
+						} else {
+							type = 'c';
+						}
+
+						if (params[type] > maxValue || params[type < minValue]) {
+							signs[type] = -signs[type];
+						}
+
+						params[type] = +params[type] + signs[type] * step;
+
+						drawAttractor(params);
+					}
+
+					function restartInterval(){
+						params = getParams(controls);
+						clearInterval(interval);
+						interval = setInterval(tick, 100);			
+					}
+
+					resizeElements();
+					window.addEventListener('resize', resizeElements);
+					controlPanel.addEventListener('change', updateParamsHandler);
+					document.querySelector('.controls-btn-reset').addEventListener('click', restartInterval);
+					params = getParams(controls);
+					interval = setInterval(tick, 100)				
+			})();
+		</script>
+	</body>
+</html>
