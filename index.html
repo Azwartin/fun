@@ -142,21 +142,21 @@
 
 					function tick(){
 						var rand = Math.random(),
-							step = 0.02,
+							step = 0.03,
 							type = 'a';
 
 						if(rand < 0.5) {
 							type = 'a';
 						} else {
-							type = 'c';
+							type = 'b';
 						}
 
-						if (params[type] > maxValue || params[type < minValue]) {
+						if (params[type] >= maxValue || params[type] <= minValue) {
+							params[type] = (params[type] >= maxValue ? maxValue : minValue);
 							signs[type] = -signs[type];
 						}
 
 						params[type] = +params[type] + signs[type] * step;
-
 						drawAttractor(params);
 					}
 
